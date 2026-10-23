@@ -2,6 +2,8 @@
 
 作者：lalala.gpt
 
+AI 协作：[OpenAI Codex](https://openai.com/codex/)（代码审阅、文档整理与开源发布）。
+
 主聊留在左侧，临时追问放到右侧。为 DeepSeek Harness（DSH）提供贴近原生使用方式的侧边聊天。
 
 ## 核心体验
