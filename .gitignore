@@ -1,0 +1,34 @@
+# Local investigation, test fixtures, dependencies and coverage
+_scratch/
+node_modules/
+coverage/
+.nyc_output/
+*.log
+*.tsbuildinfo
+
+# Release assets are attached separately, not committed with source
+*.tgz
+*.zip
+
+# Local configuration, credentials and private runtime state
+.env
+.env.*
+.npmrc
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+auth*.json
+.dsh/
+/profile/
+/profiles/
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
+
+# Operating-system metadata
+.DS_Store
+Thumbs.db
+Desktop.ini
