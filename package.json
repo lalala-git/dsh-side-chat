@@ -1,0 +1,67 @@
+{
+  "name": "dsh-plugin-side-chat-native",
+  "version": "0.3.0",
+  "description": "Experimental native side conversations for DeepSeek Harness, with scoped reference context and promotion to the main chat.",
+  "private": false,
+  "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "side-chat",
+    "native-session"
+  ],
+  "main": "./src/host/index.js",
+  "exports": {
+    ".": "./src/host/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE",
+    "src/host/index.js",
+    "src/host/service.js",
+    "src/host/delete.js",
+    "lib/client.js"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "build:check": "node scripts/build.mjs --check",
+    "test": "node --test test/native.test.mjs test/bundle.test.mjs test/host.test.mjs test/lifecycle.test.mjs test/cleanup-boundary.test.mjs test/official-contract.test.mjs",
+    "test:safe": "node --test test/native.test.mjs test/bundle.test.mjs",
+    "check": "npm run build:check && npm test",
+    "check:safe": "npm run build:check && npm run test:safe",
+    "pack:local": "node scripts/pack.mjs",
+    "pack:check": "node scripts/pack.mjs --check",
+    "prepack": "node scripts/build.mjs --check"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-connection",
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-sidebar-right",
+        "@deepseek-ai/dsh-client-ui-workspace"
+      ],
+      "platform": "web"
+    }
+  },
+  "engines": {
+    "node": ">=22",
+    "dsh": ">=0.2.1-rc.2 <0.3.0"
+  },
+  "author": "lalala.gpt",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lalala-git/dsh-side-chat.git"
+  },
+  "homepage": "https://github.com/lalala-git/dsh-side-chat#readme",
+  "bugs": {
+    "url": "https://github.com/lalala-git/dsh-side-chat/issues"
+  }
+}
