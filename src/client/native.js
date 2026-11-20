@@ -231,7 +231,7 @@ export function installNativeSideChat(ctx, { React, client, MenuItemButton = 'bu
   ctx.effect(() => ctx.sidebarRightTabs.register({ id: SIDE_CHAT_ID, kind: SIDE_CHAT_KIND,
     multiple: true, keepMounted: true,
     patterns: [SIDE_CHAT_ADDRESS + '**'], canOpen: address => !!parseChatAddress(address), title: () => '侧边聊天',
-    guide: [{ id: 'open', order: 40, title: () => '侧边聊天', description: () => '独立提问，打开时参考主聊文本，不继承待办或自动续跑。', icon: SideChatGuideIcon }],
+    guide: [{ id: 'open', order: 40, title: () => '侧边聊天', description: () => '独立提问，实时参考主聊文本，不继承待办或自动续跑。', icon: SideChatGuideIcon }],
   }), 'side-chat: tab type');
   ctx.effect(() => ctx.slots.inject('sidebar.right.pane.tab', () => ctx.slots.register({
     name: 'sidebar.right.pane.tab', key: SIDE_CHAT_ID,

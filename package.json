@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugin-side-chat-native",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Experimental native side conversations for DeepSeek Harness, with scoped reference context and promotion to the main chat.",
   "private": false,
   "type": "module",

@@ -5,10 +5,10 @@ import path from 'node:path';
 import { createSideChatService, referenceContext } from '../src/host/service.js';
 import { registerRoutes } from '../src/host/index.js';
 import { createSideChatClient } from '../src/client/native.js';
-import { fixture } from './support.mjs';
+import { fixture, settle } from './support.mjs';
 const args = (id = 'open-request-00000001') => ({ sourceSessionId: 'main', requestId: id });
 
-test('opening creates an owned EMPTY native Agent with frozen quoted context, not a fork or archived Agent', async t => {
+test('opening creates an owned EMPTY native Agent with live quoted context, not a fork or archived Agent', async t => {
   const f = fixture(t), service = createSideChatService(f.ctx), view = await service.open(args());
   assert.match(view.sessionId, /^sidechat-/); assert.equal(view.token.length, 43);
   assert.equal(f.calls.created.length, 1); const options = f.calls.created[0];
@@ -16,14 +16,19 @@ test('opening creates an owned EMPTY native Agent with frozen quoted context, no
   assert.equal(options.meta.cwd, f.main.session.header.cwd, 'inherit the actual source cwd regardless of the clone directory name');
   assert.equal(f.calls.archived.length, 0, 'archiving an OPEN chat rejects every native model step');
   assert.equal(f.calls.released, 1); assert.deepEqual(f.calls.mounted, ['standard']);
-  assert.ok(f.calls.sections[0].text.includes('parent-answer'));
-  assert.ok(!f.calls.sections[0].text.includes('private-reasoning'));
-  assert.ok(!f.calls.sections[0].text.includes('DO-NOT-COPY'));
+  const reference = f.calls.contexts.find(context => context.name === 'side-chat:reference');
+  assert.equal(typeof reference.text, 'function', 'the transcript must be dynamic runtime context, not a frozen section');
+  assert.ok(reference.text().includes('parent-answer'));
+  assert.ok(!reference.text().includes('private-reasoning'));
+  assert.ok(!reference.text().includes('DO-NOT-COPY'));
   assert.deepEqual(view.context, { messageCount: 2, truncated: false });
   assert.deepEqual(options.agentOptions, { provider: 'fixture', model: 'alpha', reasoningEffort: 'high' });
   assert.equal(f.agents.get('main'), f.main);
-  f.events[0].data.content[0].text = 'later main edit';
-  assert.ok(!f.calls.sections[0].text.includes('later main edit'));
+  // A later main message reaches the SAME side chat without reopening it.
+  const later = { type: 'user/message', surfaceOp: 'append', data: { source: { kind: 'user' }, content: [{ type: 'text', text: 'later main message' }] } };
+  f.events.push(later); f.emitSessionEvent('main', later); await settle();
+  assert.ok(reference.text().includes('later main message'));
+  assert.deepEqual(service.recover({ sessionId: view.sessionId, sourceSessionId: 'main' }).context, { messageCount: 3, truncated: false });
   await service.dispose();
 });
 
@@ -121,4 +126,18 @@ test('actual client → native envelope routes → host open/close; legacy arbit
   await client.close(view.sessionId); assert.equal(client.state(view.sessionId), 'closed'); assert.ok(f.agents.has('main'));
   const legacy = await rpc('/api', 'sideChatNative.register', { sessionId: 'main' });
   assert.equal(legacy.ok, false); assert.equal(legacy.error.code, 'sidechat/legacy-disabled');
+});
+
+test('live sync ignores foreign sessions and stops once the side chat is closed', async t => {
+  const f = fixture(t), service = createSideChatService(f.ctx), view = await service.open(args());
+  const reference = f.calls.contexts.find(context => context.name === 'side-chat:reference');
+  const before = reference.text();
+  const foreign = { type: 'user/message', surfaceOp: 'append', data: { source: { kind: 'user' }, content: [{ type: 'text', text: 'foreign-session-text' }] } };
+  f.emitSessionEvent('other-session', foreign); await settle();
+  assert.equal(reference.text(), before);
+  await service.close({ sessionId: view.sessionId, token: view.token });
+  const next = { type: 'user/message', surfaceOp: 'append', data: { source: { kind: 'user' }, content: [{ type: 'text', text: 'after-close-text' }] } };
+  f.events.push(next); f.emitSessionEvent('main', next); await settle();
+  assert.equal(reference.text(), before);
+  await service.dispose();
 });

@@ -40,12 +40,15 @@ export function fixture(t) {
     sessionPersistence: { root }, workspaceRegistry: reg,
     storageDomain: { get: name => name === 'session_projcache' ? { table: () => ({ async delete(id) { calls.deleted.push(id); } }) } : undefined },
   };
-  const ctx = { get: name => services[name], async waterfall() { return []; } };
+  const sessionListeners = new Set();
+  const ctx = { get: name => services[name], async waterfall() { return []; },
+    on(name, listener) { if (name === 'session/event') sessionListeners.add(listener); return () => sessionListeners.delete(listener); } };
   t.after(() => {
     const absolute = fs.realpathSync(dir);
     if (!absolute.startsWith(fs.realpathSync(base) + path.sep) || path.basename(absolute) !== path.basename(dir)) throw new Error('Unsafe test cleanup');
     fs.rmSync(absolute, { recursive: true, force: true });
   });
   return { ctx, services, agents, sessions, calls, events, reg, dir, root, main,
+    emitSessionEvent(sessionId, event) { for (const listener of [...sessionListeners]) listener({ id: sessionId }, event); },
     log: id => path.join(root, '2026-10-23', id) };
 }
